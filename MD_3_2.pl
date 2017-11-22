@@ -18,6 +18,13 @@ append_lists([], L, L).
 % Katru pirmā saraksta elementu pievienojam rezultāta sarakstam.
 append_lists([Head | Tail], List, [Head | Result]) :- append_lists(Tail, List, Result).
 
+% Iterē caur vāŗdnīcas tupļiem un atslēgām kuras sakrīt ar padoto, savāc sarakstu ar iegūtajām vērtībām.
+values_by_key(_, [], []).
+values_by_key(Key, [(Key, Value) | Tail], [Value | Accumulate]) :- values_by_key(Key, Tail, Accumulate).
+values_by_key(Key, [(Miss, _) | Tail], Accumulate) :-
+	dif(Key, Miss),
+	values_by_key(Key, Tail, Accumulate).
+
 % Iterē caur dotajām atslēgām, katrai atrod atbilstošās vērtības no vārdnīcas.
 % Interesanti vai būtu bijis iespējams izveidot bez sarakstu apvienošanas.
 find_values_for_keys([], _, []).
@@ -26,12 +33,19 @@ find_values_for_keys([Key | Tail], Dict, Result) :-
 	find_values_for_keys(Tail, Dict, ValuesForRest),
 	append_lists(ValuesForKey, ValuesForRest, Result).
 
-% Iterē caur vāŗdnīcas tupļiem un atslēgām kuras sakrīt ar padoto, savāc sarakstu ar iegūtajām vērtībām.
-values_by_key(_, [], []).
-values_by_key(Key, [(Key, Value) | Tail], [Value | Accumulate]) :- values_by_key(Key, Tail, Accumulate).
-values_by_key(Key, [(Miss, _) | Tail], Accumulate) :-
-	dif(Key, Miss),
-	values_by_key(Key, Tail, Accumulate).
+create_tuples(_, [], []).
+create_tuples(Key, [Value | Tail], [(Key, Value) | Accumulate]) :- create_tuples(Key, Tail, Accumulate).
+
+% Iterē caur pirmās vārdnīcas elementiem, paņemot tās elementu atslēgas un vērtības.
+% Tekošo vērtību izmantojam kā atslēgu meklējot vērtības otrā vārdnīcā.
+% No tekošās atslēgas un atrastajām B vārdnīcas vērtībām izveidojam jaunos tuple elementus.
+% Katras iterācijas rezultējošu jauniegūtās vārdnīcas elementu sarakstu apvienojam ar rekursīvi iegūtajiem pārējiem sarakstiem.
+find_values_as_keys([], _, []).
+find_values_as_keys([(Key, Value) | Tail], DictB, Result) :-
+	values_by_key(Value, DictB, ValuesForKey),
+	create_tuples(Key, ValuesForKey, A_B_Tuples),
+	find_values_as_keys(Tail, DictB, Rest_A_B_Tuples),
+	append_lists(A_B_Tuples, Rest_A_B_Tuples, Result).
 
 % if_then_else(P, Q, R) :- P, !, Q.
 % if_then_else(P, Q, R) :- R.
@@ -42,7 +56,19 @@ aa(A, B, C) :-
 	find_values_for_keys(A, B, Values),
 	my_unique(Values, C).
 
-% C=[aa, def]
-testCaseaa(aa([a, c], [(a, aa), (bb, bbb), (c, def)], C)).
-% C=[c, d, e]
-testCaseaa(aa([a, b], [(a, c), (a, d), (b, c), (b, e), (c, f)], C)).
+bb(A, B, C) :-
+	find_values_as_keys(A, B, Values),
+	my_unique(Values, C).
+
+% X=[aa, def]
+testCase_aa(aa([a, c], [(a, aa), (bb, bbb), (c, def)], X)).
+% X=[c, d, e]
+testCase_aa(aa([a, b], [(a, c), (a, d), (b, c), (b, e), (c, f)], X)).
+
+% X=[(a, c), (a, d)]
+testCase_bb(bb([(a, b)], [(b,c), (b,d)], X)).
+% X=[(a, c), (a, d), (e, c), (e, d)]
+testCase_bb(bb([(a, b), (e, b)], [(b,c), (b,d)], X)).
+% X=[(a ,c)]
+testCase_bb(bb([(a, b), (a, d), (a, e)], [(b,c), (d,c)],X)).
+
