@@ -47,8 +47,15 @@ find_values_as_keys([(Key, Value) | Tail], DictB, Result) :-
 	find_values_as_keys(Tail, DictB, Rest_A_B_Tuples),
 	append_lists(A_B_Tuples, Rest_A_B_Tuples, Result).
 
-% if_then_else(P, Q, R) :- P, !, Q.
-% if_then_else(P, Q, R) :- R.
+if_then_else(P, Q, R) :- P, !, Q.
+if_then_else(P, Q, R) :- R.
+
+last_element([Last | []], Last).
+last_element([Head | Tail], Last) :- last_element(Tail, Last).
+
+until_p(Dict, Result) :-
+	last_element(Result, Last),
+	bb(Dict, Dict, BBResult).
 
 % Šim predikātam ir iespējams atrast esošu risinājumu StackOverflow. Nelaidīšu garām iespēju to pielāgot/aprakstīt savā risinājumā.
 % https://stackoverflow.com/questions/36306362/prolog-find-list-elements-in-a-list-of-tuples
@@ -59,6 +66,15 @@ aa(A, B, C) :-
 bb(A, B, C) :-
 	find_values_as_keys(A, B, Values),
 	my_unique(Values, C).
+
+cc(A, B) :-
+	bb(A, A, Inter),
+	append_lists(A, Inter, Appended),
+	my_unique(Appended, B).
+
+% cc(A, B) :-
+% 	until_p(A, B).
+
 
 % X=[aa, def]
 testCase_aa(aa([a, c], [(a, aa), (bb, bbb), (c, def)], X)).
