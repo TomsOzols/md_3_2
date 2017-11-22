@@ -13,29 +13,28 @@ my_unique([Head | Tail], [Head | Accumulate]) :-
 	remove_all_X(Head, Tail, WithoutX),
 	my_unique(WithoutX, Accumulate).
 
-% unique_find_values_for_keys(Keys, Dict, Result) :-
-% 	find_values_for_keys(Keys, Dict, Values),
-% 	my_unique(Values, Result).
-
 % Sākotnēji 'nokopējam' otro sarakstu un nostādam kā rezultātu, kuram tiks pievienotas vērtības no pirmā saraksta.
 append_lists([], L, L).
 % Katru pirmā saraksta elementu pievienojam rezultāta sarakstam.
 append_lists([Head | Tail], List, [Head | Result]) :- append_lists(Tail, List, Result).
 
+% Iterē caur dotajām atslēgām, katrai atrod atbilstošās vērtības no vārdnīcas.
+% Interesanti vai būtu bijis iespējams izveidot bez sarakstu apvienošanas.
 find_values_for_keys([], _, []).
 find_values_for_keys([Key | Tail], Dict, Result) :-
 	values_by_key(Key, Dict, ValuesForKey),
 	find_values_for_keys(Tail, Dict, ValuesForRest),
 	append_lists(ValuesForKey, ValuesForRest, Result).
 
+% Iterē caur vāŗdnīcas tupļiem un atslēgām kuras sakrīt ar padoto, savāc sarakstu ar iegūtajām vērtībām.
 values_by_key(_, [], []).
 values_by_key(Key, [(Key, Value) | Tail], [Value | Accumulate]) :- values_by_key(Key, Tail, Accumulate).
 values_by_key(Key, [(Miss, _) | Tail], Accumulate) :-
 	dif(Key, Miss),
 	values_by_key(Key, Tail, Accumulate).
 
-if_then_else(P, Q, R) :- P, !, Q.
-if_then_else(P, Q, R) :- R.
+% if_then_else(P, Q, R) :- P, !, Q.
+% if_then_else(P, Q, R) :- R.
 
 % Šim predikātam ir iespējams atrast esošu risinājumu StackOverflow. Nelaidīšu garām iespēju to pielāgot/aprakstīt savā risinājumā.
 % https://stackoverflow.com/questions/36306362/prolog-find-list-elements-in-a-list-of-tuples
