@@ -57,6 +57,9 @@ until_p(Dict, Result) :-
 	last_element(Result, Last),
 	bb(Dict, Dict, BBResult).
 
+% getAllValuesAndKeys([], [], []).
+% getAllValuesAndKeys([(Key, Value) | Tail], [Key | Keys], [Value | Values]) :- getAllValuesAndKeys(Tail, Keys, Values).
+
 % Šim predikātam ir iespējams atrast esošu risinājumu StackOverflow. Nelaidīšu garām iespēju to pielāgot/aprakstīt savā risinājumā.
 % https://stackoverflow.com/questions/36306362/prolog-find-list-elements-in-a-list-of-tuples
 aa(A, B, C) :-
@@ -67,14 +70,28 @@ bb(A, B, C) :-
 	find_values_as_keys(A, B, Values),
 	my_unique(Values, C).
 
+% Neiznācis predikāts. Dara to ko vajag, bet nekad neapstājas.
+% Ideja bija tāda, ka jācenšās noteikt kurā mirklī abu sarakstu garumi ir vienādi, tad arī beidzam darbu.
+% Gluži nestrādā.
+% Izsauc bb, kā abas gaidāmās vārdnīcas pielietojot A vārdnīcu
+% Pēc tā apvieno tekošo A<N> vārdnīcu ar bb predikāta rezultātu.
+% Paņemam tikai unikālos elementus no jauniegūtās vārdnīcas.
+% Iegūstam jaunās vārdnīcas garumu, un kopā ar iepriekšējās garumu un jauno sarakstu dodam tālāk uz nākamo rekursijas iterāciju.
+weird_iterator(_, ListLength, ListLength, []).
+weird_iterator(A, NLength, _, [A | Accumulate]) :-
+	% dif(NLength, NOneLength),
+	bb(A, A, BBResult),
+	append_lists(A, BBResult, Appended),
+	my_unique(Appended, Result),
+	length(Result, NOneLength),
+	weird_iterator(Result, NOneLength, NLength, Accumulate).
+
+% Nedarbojas, bet pamata ideju sanācis uztaisīt.
+% Ja predikāts tiek palaists, tad pirmā atdotā X vērtība būs saraksts ar korektajām A kompozīcijām līdz P<A>.
+% Problēma gan tāda, ka palika nebeidzams cikls, un kods cenšas vēl un vēl ražot X vērtības.
 cc(A, B) :-
-	bb(A, A, Inter),
-	append_lists(A, Inter, Appended),
-	my_unique(Appended, B).
-
-% cc(A, B) :-
-% 	until_p(A, B).
-
+	length(A, ALength),
+	weird_iterator(A, ALength, 0, B).
 
 % X=[aa, def]
 testCase_aa(aa([a, c], [(a, aa), (bb, bbb), (c, def)], X)).
